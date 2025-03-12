@@ -22,13 +22,13 @@ namespace TaskManagerAPI.Data
             // Configure TaskItem relationships
             builder.Entity<TaskItem>()
                 .HasOne(t => t.CreatedBy)
-                .WithMany(u => u.CreatedTasks)
+                .WithMany()
                 .HasForeignKey(t => t.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<TaskItem>()
                 .HasOne(t => t.AssignedTo)
-                .WithMany(u => u.AssignedTasks)
+                .WithMany()
                 .HasForeignKey(t => t.AssignedToId)
                 .OnDelete(DeleteBehavior.SetNull);
 

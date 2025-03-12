@@ -54,10 +54,8 @@ export const categoriesAPI = {
 
 // Users API
 export const usersAPI = {
-  getAllUsers: () => api.get<User[]>('/api/users'),
-  getUserById: (id: string) => api.get<User>(`/api/users/${id}`),
-  updateUser: (id: string, user: Partial<User>) => api.put<User>(`/api/users/${id}`, user),
-  deleteUser: (id: string) => api.delete(`/api/users/${id}`),
+  getAllUsers: () => api.get<User[]>('/api/user'),
+  getUserById: (id: string) => api.get<User>(`/api/user/${id}`),
 };
 
 export default api; 

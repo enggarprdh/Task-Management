@@ -6,12 +6,6 @@ namespace TaskManagerAPI.Models
 {
     public class ApplicationUser : IdentityUser<Guid>
     {
-        public ApplicationUser()
-        {
-            CreatedTasks = new HashSet<TaskItem>();
-            AssignedTasks = new HashSet<TaskItem>();
-        }
-
         [Required]
         [StringLength(50)]
         public string FirstName { get; set; }
@@ -22,8 +16,5 @@ namespace TaskManagerAPI.Models
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
-        public virtual ICollection<TaskItem> CreatedTasks { get; set; }
-        public virtual ICollection<TaskItem> AssignedTasks { get; set; }
     }
 }

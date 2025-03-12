@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import KanbanBoard from '@/components/board/KanbanBoard';
 import MainLayout from '@/components/shared/Layout/MainLayout';
-import { tasksAPI } from '@/lib/api';
+import { tasksAPI, usersAPI } from '@/lib/api';
 import { BoardState, Task } from '@/types/task';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/Card';
 import SearchForm, { SearchParams } from '@/components/shared/forms/SearchForm';
@@ -14,7 +14,6 @@ import Button from '@/components/shared/ui/Button';
 
 export default function BoardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [searchParams, setSearchParams] = useState<SearchParams>({ query: '' });
   const [boardState, setBoardState] = useState<BoardState>({
     columns: {
       todo: {
@@ -36,17 +35,18 @@ export default function BoardPage() {
   });
 
   // Fetch tasks
-  const { data: tasks, isLoading, error } = useQuery({
+  const { data: tasks, isLoading: isTasksLoading, error: tasksError } = useQuery({
     queryKey: ['tasks'],
     queryFn: tasksAPI.getAllTasks,
   });
 
-  // Mock users and categories for the form
-  const mockUsers = [
-    { id: '1', username: 'johndoe', email: 'john@example.com', firstName: 'John', lastName: 'Doe' },
-    { id: '2', username: 'janesmith', email: 'jane@example.com', firstName: 'Jane', lastName: 'Smith' },
-  ];
+  // Fetch users
+  const { data: users, isLoading: isUsersLoading, error: usersError } = useQuery({
+    queryKey: ['users'],
+    queryFn: usersAPI.getAllUsers,
+  });
 
+  // Mock categories for the form
   const mockCategories = [
     { id: '1', name: 'Frontend', description: 'Frontend tasks' },
     { id: '2', name: 'Backend', description: 'Backend tasks' },
@@ -91,11 +91,9 @@ export default function BoardPage() {
   };
 
   const handleSearch = (params: SearchParams) => {
-    setSearchParams(params);
-    // In a real app, you would filter tasks based on search params
     console.log('Search params:', params);
     
-    // Example of how you might use searchParams to filter tasks
+    // Example of how you might use params to filter tasks
     if (tasks?.data && params.query) {
       const filteredTasks = tasks.data.filter((task: Task) => 
         task.title.toLowerCase().includes(params.query.toLowerCase()) ||
@@ -105,16 +103,20 @@ export default function BoardPage() {
     }
   };
 
-  const getPriority = (priority: string): number => {
-    if (priority.toLowerCase() === 'low') {
-      return 0;
-    } else if (priority.toLowerCase() === 'medium') {
-      return 1;
-    } else if (priority.toLowerCase() === 'high') {
-      return 2;
+  // Add a helper function to convert priority string to number
+  const getPriorityValue = (priority: string): number => {
+    switch (priority) {
+      case 'Low':
+        return 0;
+      case 'Medium':
+        return 1;
+      case 'High':
+        return 2;
+      default:
+        return 0; // Default to Low priority
     }
-    return 0; // Default to low priority if invalid input
   };
+
   const handleCreateTask = async (data: TaskFormValues) => {
     try {
       // Convert the form data to the format expected by the API
@@ -122,7 +124,7 @@ export default function BoardPage() {
         title: data.title,
         description: data.description,
         dueDate: new Date(data.dueDate),
-        priority: getPriority(data.priority), 
+        priority: getPriorityValue(data.priority), // Convert string priority to numeric value
         assignedToId: data.assignedToId,
         // The status is set to Todo by default on the server
         // Categories will be handled separately by the backend
@@ -162,6 +164,10 @@ export default function BoardPage() {
     categoryIds: string[];
   };
 
+  // Check if data is loading
+  const isLoading = isTasksLoading || isUsersLoading;
+  const error = tasksError || usersError;
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -172,16 +178,16 @@ export default function BoardPage() {
     );
   }
 
- /* if (error) {
+  if (error) {
     return (
       <MainLayout>
         <div className="flex flex-col items-center justify-center h-screen">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error loading tasks</h2>
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error loading data</h2>
           <p className="text-gray-600">Please try again later</p>
         </div>
       </MainLayout>
     );
-  }*/
+  }
 
   return (
     <MainLayout>
@@ -217,7 +223,7 @@ export default function BoardPage() {
           size="lg"
         >
           <TaskForm
-            users={mockUsers}
+            users={users?.data || []}
             categories={mockCategories}
             onSubmit={handleCreateTask}
             onCancel={() => setIsCreateModalOpen(false)}

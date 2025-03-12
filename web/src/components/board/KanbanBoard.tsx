@@ -1,24 +1,106 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import Column from './Column';
 import { BoardState, Task, Status } from '@/types/task';
 import TaskDetail from './TaskDetail';
+import axios from 'axios';
 
 interface KanbanBoardProps {
-  initialBoardState: BoardState;
   onTaskMove: (taskId: string, sourceColumnId: string, destinationColumnId: string, newIndex: number) => void;
 }
 
-export default function KanbanBoard({ initialBoardState, onTaskMove }: KanbanBoardProps) {
-  const [boardState, setBoardState] = useState<BoardState>(initialBoardState);
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5258/api';
+
+// Status enum values from API
+const STATUS = {
+  Todo: 0,
+  InProgress: 1,
+  Done: 2,
+} as const;
+
+export default function KanbanBoard({ onTaskMove }: KanbanBoardProps) {
+  const [boardState, setBoardState] = useState<BoardState>({
+    columns: {
+      todo: {
+        id: 'todo',
+        title: 'To Do',
+        tasks: []
+      },
+      inProgress: {
+        id: 'inProgress',
+        title: 'In Progress',
+        tasks: []
+      },
+      done: {
+        id: 'done',
+        title: 'Done',
+        tasks: []
+      }
+    }
+  });
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/task`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // Group tasks by status
+        const tasks = response.data;
+        const groupedTasks = tasks.reduce((acc: BoardState, task: Task) => {
+          const columnId = task.status === STATUS.Todo ? 'todo' 
+            : task.status === STATUS.InProgress ? 'inProgress' 
+            : 'done';
+          if (acc.columns[columnId]) {
+            acc.columns[columnId].tasks.push(task);
+          }
+          return acc;
+        }, {
+          columns: {
+            todo: {
+              id: 'todo',
+              title: 'To Do',
+              tasks: []
+            },
+            inProgress: {
+              id: 'inProgress',
+              title: 'In Progress',
+              tasks: []
+            },
+            done: {
+              id: 'done',
+              title: 'Done',
+              tasks: []
+            }
+          }
+        });
+
+        setBoardState(groupedTasks);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load tasks. Please try again later.');
+        console.error('Error fetching tasks:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   const handleDragEnd = (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
-    // If there's no destination or the item is dropped in the same place
     if (!destination || 
         (destination.droppableId === source.droppableId && 
          destination.index === source.index)) {
@@ -28,7 +110,6 @@ export default function KanbanBoard({ initialBoardState, onTaskMove }: KanbanBoa
     const sourceColumn = boardState.columns[source.droppableId];
     const destinationColumn = boardState.columns[destination.droppableId];
     
-    // If moving within the same column
     if (sourceColumn.id === destinationColumn.id) {
       const newTasks = Array.from(sourceColumn.tasks);
       const [movedTask] = newTasks.splice(source.index, 1);
@@ -52,21 +133,19 @@ export default function KanbanBoard({ initialBoardState, onTaskMove }: KanbanBoa
       return;
     }
 
-    // Moving from one column to another
     const sourceTasks = Array.from(sourceColumn.tasks);
     const [movedTask] = sourceTasks.splice(source.index, 1);
     
-    // Update the task status based on the destination column
     const getNewStatus = (columnId: string): Status => {
       switch (columnId) {
         case 'todo':
-          return 'Todo';
+          return STATUS.Todo;
         case 'inProgress':
-          return 'InProgress';
+          return STATUS.InProgress;
         case 'done':
-          return 'Done';
+          return STATUS.Done;
         default:
-          return 'Todo';
+          return STATUS.Todo;
       }
     };
     
@@ -104,6 +183,14 @@ export default function KanbanBoard({ initialBoardState, onTaskMove }: KanbanBoa
   const handleCloseTaskDetail = () => {
     setSelectedTask(null);
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-full">Loading tasks...</div>;
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-full text-red-500">{error}</div>;
+  }
 
   return (
     <div className="flex flex-col h-full">

@@ -1,5 +1,5 @@
-export type Priority = 'Low' | 'Medium' | 'High';
-export type Status = 'Todo' | 'InProgress' | 'Done';
+export type Priority = number; // 0 = Low, 1 = Medium, 2 = High
+export type Status = number;
 
 export interface User {
   id: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Task, Priority, Status, Category, User } from '@/types/task';
+import { Task, Status, Category, User } from '@/types/task';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,20 @@ const taskSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
+
+// Helper function to convert numeric priority to string
+const getPriorityString = (priority: number): 'Low' | 'Medium' | 'High' => {
+  switch (priority) {
+    case 0:
+      return 'Low';
+    case 1:
+      return 'Medium';
+    case 2:
+      return 'High';
+    default:
+      return 'Low';
+  }
+};
 
 interface TaskFormProps {
   task?: Task;
@@ -35,9 +49,9 @@ export default function TaskForm({ task, users, categories, onSubmit, onCancel }
     title: task?.title || '',
     description: task?.description || '',
     dueDate: task ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-    priority: task?.priority || 'Medium',
+    priority: task ? getPriorityString(task.priority) : 'Medium',
     status: task?.status || 'Todo',
-    assignedToId: task?.assignedTo.id || '',
+    assignedToId: task?.assignedTo?.id || '',
     categoryIds: selectedCategories,
   };
 
@@ -137,7 +151,7 @@ export default function TaskForm({ task, users, categories, onSubmit, onCancel }
               name="priority"
               render={({ field }) => (
                 <>
-                  {(['Low', 'Medium', 'High'] as Priority[]).map((priority) => (
+                  {(['Low', 'Medium', 'High'] as const).map((priority) => (
                     <label key={priority} className="flex items-center">
                       <input
                         type="radio"
