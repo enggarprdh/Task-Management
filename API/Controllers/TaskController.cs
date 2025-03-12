@@ -76,6 +76,7 @@ namespace TaskManagerAPI.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var taskItem = new TaskItem
             {
+                Id = Guid.NewGuid(),
                 Title = request.Title,
                 Description = request.Description,
                 DueDate = request.DueDate,
