@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { Priority, Status } from '@/types/task';
+import { Priority, Status, STATUS, PRIORITY } from '@/types/task';
 
 interface SearchFormProps {
   onSearch: (searchParams: SearchParams) => void;
@@ -27,10 +27,10 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
     onSearch(searchParams);
   };
 
-  const handleInputChange = (key: keyof SearchParams, value: string) => {
+  const handleInputChange = (key: keyof SearchParams, value: string | number) => {
     setSearchParams(prev => ({
       ...prev,
-      [key]: value,
+      [key]: (key === 'status' || key === 'priority') && value !== '' ? Number(value) : value,
     }));
   };
 
@@ -75,13 +75,13 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
             <select
               id="status"
               className="w-full p-2 text-sm border border-gray-300 rounded-lg"
-              value={searchParams.status || ''}
-              onChange={(e) => handleInputChange('status', e.target.value as Status)}
+              value={searchParams.status ?? ''}
+              onChange={(e) => handleInputChange('status', e.target.value)}
             >
-              <option value="">All Statuses</option>
-              <option value="Todo">Todo</option>
-              <option value="InProgress">In Progress</option>
-              <option value="Done">Done</option>
+              <option value=''>All Statuses</option>
+              <option value={STATUS.TODO}>Todo</option>
+              <option value={STATUS.IN_PROGRESS}>In Progress</option>
+              <option value={STATUS.DONE}>Done</option>
             </select>
           </div>
 
@@ -92,13 +92,13 @@ export default function SearchForm({ onSearch }: SearchFormProps) {
             <select
               id="priority"
               className="w-full p-2 text-sm border border-gray-300 rounded-lg"
-              value={searchParams.priority || ''}
-              onChange={(e) => handleInputChange('priority', e.target.value as Priority)}
+              value={searchParams.priority ?? ''}
+              onChange={(e) => handleInputChange('priority', e.target.value)}
             >
               <option value="">All Priorities</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
+              <option value={PRIORITY.LOW}>Low</option>
+              <option value={PRIORITY.MEDIUM}>Medium</option>
+              <option value={PRIORITY.HIGH}>High</option>
             </select>
           </div>
 

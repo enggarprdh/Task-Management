@@ -1,6 +1,6 @@
 'use client';
 
-import { Task, Status, Category, User } from '@/types/task';
+import { Task, Status, Priority, STATUS, PRIORITY, User, Category } from '@/types/task';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,16 +19,29 @@ const taskSchema = z.object({
 type TaskFormValues = z.infer<typeof taskSchema>;
 
 // Helper function to convert numeric priority to string
-const getPriorityString = (priority: number): 'Low' | 'Medium' | 'High' => {
+const getPriorityString = (priority: Priority): 'Low' | 'Medium' | 'High' => {
   switch (priority) {
-    case 0:
+    case PRIORITY.LOW:
       return 'Low';
-    case 1:
+    case PRIORITY.MEDIUM:
       return 'Medium';
-    case 2:
+    case PRIORITY.HIGH:
       return 'High';
     default:
       return 'Low';
+  }
+};
+
+const getStatusString = (status: Status): 'Todo' | 'InProgress' | 'Done' => {
+  switch (status) {
+    case STATUS.TODO:
+      return 'Todo';
+    case STATUS.IN_PROGRESS:
+      return 'InProgress';
+    case STATUS.DONE:
+      return 'Done';
+    default:
+      return 'Todo';
   }
 };
 
@@ -50,7 +63,7 @@ export default function TaskForm({ task, users, categories, onSubmit, onCancel }
     description: task?.description || '',
     dueDate: task ? new Date(task.dueDate).toISOString().split('T')[0] : '',
     priority: task ? getPriorityString(task.priority) : 'Medium',
-    status: task?.status || 'Todo',
+    status: task ? getStatusString(task.status) : 'Todo',
     assignedToId: task?.assignedTo?.id || '',
     categoryIds: selectedCategories,
   };
@@ -182,7 +195,7 @@ export default function TaskForm({ task, users, categories, onSubmit, onCancel }
               name="status"
               render={({ field }) => (
                 <>
-                  {(['Todo', 'InProgress', 'Done'] as Status[]).map((status) => (
+                  {(['Todo', 'InProgress', 'Done'] as const).map((status) => (
                     <label key={status} className="flex items-center">
                       <input
                         type="radio"

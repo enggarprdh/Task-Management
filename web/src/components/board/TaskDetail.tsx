@@ -14,11 +14,11 @@ export default function TaskDetail({ task, onClose }: TaskDetailProps) {
   
   const getPriorityColor = (priority: Priority) => {
     switch (priority) {
-      case 'High':
+      case 2:
         return 'bg-red-100 text-red-800';
-      case 'Medium':
+      case 1:
         return 'bg-yellow-100 text-yellow-800';
-      case 'Low':
+      case 0:
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -27,11 +27,11 @@ export default function TaskDetail({ task, onClose }: TaskDetailProps) {
 
   const getStatusColor = (status: Status) => {
     switch (status) {
-      case 'Todo':
+      case 0:
         return 'bg-gray-100 text-gray-800';
-      case 'InProgress':
+      case 1:
         return 'bg-blue-100 text-blue-800';
-      case 'Done':
+      case 2:
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -176,7 +176,7 @@ export default function TaskDetail({ task, onClose }: TaskDetailProps) {
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 mr-3"></div>
                 <div>
                   <p className="text-sm">
-                    <span className="font-medium">Jane Smith</span> added a comment: "Let's try to finish this by Friday."
+                    <span className="font-medium">Jane Smith</span> added a comment: &quot;Let&apos;s try to finish this by Friday.&quot;
                   </p>
                   <p className="text-xs text-gray-500">2 days ago</p>
                 </div>

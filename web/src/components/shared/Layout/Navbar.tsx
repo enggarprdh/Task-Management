@@ -10,7 +10,6 @@ interface NavbarProps {
 
 export default function Navbar({ user }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   return (
     <nav className="bg-white border-b border-gray-200 px-4 py-2.5 fixed w-full top-0 left-0 z-50">
       <div className="flex flex-wrap justify-between items-center">

@@ -52,6 +52,7 @@ export default function RegisterPage() {
         lastName: data.lastName,
         username: data.username,
         email: data.email,
+        password:data.password
       });
       console.log('Registration successful:', response);
       

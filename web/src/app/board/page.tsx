@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import KanbanBoard from '@/components/board/KanbanBoard';
 import MainLayout from '@/components/shared/Layout/MainLayout';
 import { tasksAPI, usersAPI } from '@/lib/api';
-import { BoardState, Task } from '@/types/task';
+import { BoardState, Task, Priority, PRIORITY, Status } from '@/types/task';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/shared/ui/Card';
 import SearchForm, { SearchParams } from '@/components/shared/forms/SearchForm';
 import Modal from '@/components/shared/ui/Modal';
@@ -62,17 +62,17 @@ export default function BoardPage() {
           todo: {
             id: 'todo',
             title: 'Todo',
-            tasks: tasks.data.filter((task: Task) => task.status === 'Todo'),
+            tasks: tasks.data.filter((task: Task) => task.status === 0),
           },
           inProgress: {
             id: 'inProgress',
             title: 'In Progress',
-            tasks: tasks.data.filter((task: Task) => task.status === 'InProgress'),
+            tasks: tasks.data.filter((task: Task) => task.status === 1),
           },
           done: {
             id: 'done',
             title: 'Done',
-            tasks: tasks.data.filter((task: Task) => task.status === 'Done'),
+            tasks: tasks.data.filter((task: Task) => task.status === 2),
           },
         },
       };
@@ -80,14 +80,52 @@ export default function BoardPage() {
     }
   }, [tasks]);
 
+  const queryClient = useQueryClient();
+
   const handleTaskMove = async (
     taskId: string,
     sourceColumnId: string,
     destinationColumnId: string,
     newIndex: number
   ) => {
-    // In a real app, you would update the task status on the server
-    console.log(`Moving task ${taskId} from ${sourceColumnId} to ${destinationColumnId} at index ${newIndex}`);
+    try {
+      // Konversi column ID ke status enum
+      const getTaskStatus = (columnId: string): Status => {
+        switch (columnId) {
+          case 'todo':
+            return 0;
+          case 'inProgress':
+            return 1;
+          case 'done':
+            return 2;
+          default:
+            return 0;
+        }
+      };
+      const getTaskDetail = (taskId:string): Task | undefined => {
+        let obj = boardState.columns[sourceColumnId];
+        if (obj) {
+          return obj.tasks.find((task: Task) => task.id === taskId);
+        }
+        return undefined;
+      };
+
+      // Persiapkan data untuk update
+      let taskUpdate = getTaskDetail(taskId);
+      const updateData: Partial<Task> = {
+        ...taskUpdate,
+        status: getTaskStatus(destinationColumnId)
+      };
+
+      // Panggil API untuk update task
+      await tasksAPI.updateTask(taskId, updateData);
+      
+      // Refresh data dengan invalidate query cache
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      // Tambahkan handling error sesuai kebutuhan
+    }
   };
 
   const handleSearch = (params: SearchParams) => {
@@ -103,17 +141,17 @@ export default function BoardPage() {
     }
   };
 
-  // Add a helper function to convert priority string to number
-  const getPriorityValue = (priority: string): number => {
+  // Add a helper function to convert priority string to Priority type
+  const getPriorityValue = (priority: string): Priority => {
     switch (priority) {
       case 'Low':
-        return 0;
+        return PRIORITY.LOW;
       case 'Medium':
-        return 1;
+        return PRIORITY.MEDIUM;
       case 'High':
-        return 2;
+        return PRIORITY.HIGH;
       default:
-        return 0; // Default to Low priority
+        return PRIORITY.LOW;
     }
   };
 
@@ -212,7 +250,7 @@ export default function BoardPage() {
         </Card>
 
         <KanbanBoard
-          initialBoardState={boardState}
+          boardState={boardState}
           onTaskMove={handleTaskMove}
         />
 

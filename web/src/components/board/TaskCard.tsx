@@ -11,13 +11,13 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, index, onClick }: TaskCardProps) {
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: number) => {
     switch (priority) {
-      case 'High':
+      case 2:
         return 'bg-red-100 text-red-800';
-      case 'Medium':
+      case 1:
         return 'bg-yellow-100 text-yellow-800';
-      case 'Low':
+      case 0:
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';

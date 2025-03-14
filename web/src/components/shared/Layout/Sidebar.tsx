@@ -2,13 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { User } from '@/types/task';
 
-interface SidebarProps {
-  user?: User | null;
-}
-
-export default function Sidebar({ user }: SidebarProps) {
+export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (

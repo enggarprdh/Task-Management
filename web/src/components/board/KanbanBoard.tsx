@@ -8,6 +8,7 @@ import TaskDetail from './TaskDetail';
 import axios from 'axios';
 
 interface KanbanBoardProps {
+  boardState: BoardState;
   onTaskMove: (taskId: string, sourceColumnId: string, destinationColumnId: string, newIndex: number) => void;
 }
 
@@ -20,26 +21,8 @@ const STATUS = {
   Done: 2,
 } as const;
 
-export default function KanbanBoard({ onTaskMove }: KanbanBoardProps) {
-  const [boardState, setBoardState] = useState<BoardState>({
-    columns: {
-      todo: {
-        id: 'todo',
-        title: 'To Do',
-        tasks: []
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: 'In Progress',
-        tasks: []
-      },
-      done: {
-        id: 'done',
-        title: 'Done',
-        tasks: []
-      }
-    }
-  });
+export default function KanbanBoard({ boardState, onTaskMove }: KanbanBoardProps) {
+  const [internalBoardState, setBoardState] = useState<BoardState>(boardState);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,8 +90,8 @@ export default function KanbanBoard({ onTaskMove }: KanbanBoardProps) {
       return;
     }
 
-    const sourceColumn = boardState.columns[source.droppableId];
-    const destinationColumn = boardState.columns[destination.droppableId];
+    const sourceColumn = internalBoardState.columns[source.droppableId];
+    const destinationColumn = internalBoardState.columns[destination.droppableId];
     
     if (sourceColumn.id === destinationColumn.id) {
       const newTasks = Array.from(sourceColumn.tasks);
@@ -121,9 +104,9 @@ export default function KanbanBoard({ onTaskMove }: KanbanBoardProps) {
       };
 
       const newState = {
-        ...boardState,
+        ...internalBoardState,
         columns: {
-          ...boardState.columns,
+          ...internalBoardState.columns,
           [newColumn.id]: newColumn,
         },
       };
@@ -158,9 +141,9 @@ export default function KanbanBoard({ onTaskMove }: KanbanBoardProps) {
     destinationTasks.splice(destination.index, 0, updatedTask);
 
     const newState = {
-      ...boardState,
+      ...internalBoardState,
       columns: {
-        ...boardState.columns,
+        ...internalBoardState.columns,
         [sourceColumn.id]: {
           ...sourceColumn,
           tasks: sourceTasks,
@@ -196,7 +179,7 @@ export default function KanbanBoard({ onTaskMove }: KanbanBoardProps) {
     <div className="flex flex-col h-full">
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex space-x-4 overflow-x-auto pb-4 pt-2">
-          {Object.values(boardState.columns).map((column) => (
+          {Object.values(internalBoardState.columns).map((column) => (
             <Column 
               key={column.id} 
               column={column} 
