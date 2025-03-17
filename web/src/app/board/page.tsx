@@ -85,8 +85,7 @@ export default function BoardPage() {
   const handleTaskMove = async (
     taskId: string,
     sourceColumnId: string,
-    destinationColumnId: string,
-    newIndex: number
+    destinationColumnId: string
   ) => {
     try {
       // Konversi column ID ke status enum
@@ -103,7 +102,7 @@ export default function BoardPage() {
         }
       };
       const getTaskDetail = (taskId:string): Task | undefined => {
-        let obj = boardState.columns[sourceColumnId];
+        const obj = boardState.columns[sourceColumnId];
         if (obj) {
           return obj.tasks.find((task: Task) => task.id === taskId);
         }
@@ -111,7 +110,7 @@ export default function BoardPage() {
       };
 
       // Persiapkan data untuk update
-      let taskUpdate = getTaskDetail(taskId);
+      const taskUpdate = getTaskDetail(taskId);
       const updateData: Partial<Task> = {
         ...taskUpdate,
         status: getTaskStatus(destinationColumnId)

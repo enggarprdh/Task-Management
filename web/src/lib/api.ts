@@ -2,8 +2,7 @@ import axios from 'axios';
 import { Task, User, Category } from '@/types/task';
 
 //const API_URL = 'http://eng-taskmanagement.runasp.net';
-const API_URL = 'http://localhost:5258'
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5258'
 
 const api = axios.create({
   baseURL: API_URL,
